@@ -174,6 +174,7 @@ class fcc_custom_form
 	 * @param mixed $form
 	 * @uses sendmail
 	 * @uses akismet_sendmail
+	 * @todo ricontrollare il funzionamento delle reserved words
 	 */
 	function compose_mail($form)
 	{
@@ -281,11 +282,13 @@ function fcc_replace($content) {
 
 function fcc_loader($data)
 {
+	$output = '';
+	
 	if (($data[1]=='') OR (!file_exists(ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php')))
 	{
 		// creare il file di default
-		echo "missed form file<br/>";
-		echo ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
+		$output .= "missed form file<br/>";
+		$output .=  ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
 	}
 	else 
 	{
@@ -338,15 +341,18 @@ function fcc_loader($data)
 				$js .= "	
 	  					</script>";
 				
-				echo "	<div class='fcc_error'>
+				$output .=  "	<div class='fcc_error'>
 							<h2>Sono presenti errori nella form</h2>
 							<ul>$custom_form->error_msg</ul>
 						</div>";
 			}
 		
-			echo "<div>";
-			include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
-			echo "<br/></div>$js";
+			$output .=  "<div>";
+			//include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
+			$output .= file_get_contents(ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php',false);
+			$output .=  "<br/></div>$js";
+			
+			return $output;
 		}	
 	}
 	//print_r($data);
