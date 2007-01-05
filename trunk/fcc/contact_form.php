@@ -3,7 +3,7 @@
 Plugin Name: Contact Form Generator
 Plugin URI: http://www.fullo.net
 Description: This contact form accept any data from your site and send as email to you
-Version: 0.3
+Version: 0.4
 Author: Francesco Fullone
 Author URI: http://www.fullo.net/
 */
@@ -39,7 +39,7 @@ class fcc_custom_form
 	}
 
 	/**
-	 * controllo che il campo sia maggiore di 0
+	 * check if the input is an integer
 	 *
 	 * @param mixed $integer
 	 * @return text
@@ -48,7 +48,8 @@ class fcc_custom_form
 	{
 		foreach ($integer as $k => $v)
 		{
-			if (!is_int($_POST['fcc'][$v]))
+			$num = $_POST['fcc'][$v];
+			if (!is_int($num))
 			{
 				$this->error_msg .= "<li>il campo $v non è un numero</li>";
 				$this->error_input[] = $v;
@@ -57,33 +58,47 @@ class fcc_custom_form
 		}	
 	}
 	
+	/**
+	 * check if the input is a valid date (dd-mm-aaaa)
+	 *
+	 * @param mixed $date
+	 */
 	function parse_date($date)
 	{
 		foreach ($date as $k => $v)
 		{
 			if (ereg('^(0?[1-9]|[1-2][0-9]|3[01])[[:blank:]/\.\\-](0?[1-9]|1[0-2])[[:blank:]/\.\\-](19[3-9][0-9]|20[01][0-9])$|^$',$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= "<li>il campo $v non è una data</li>";
+				$this->error_msg .= "<li>il campo $v non è una data valida (gg-mm-aaaa)</li>";
 				$this->error_input[] = $v;
 				$this->error = true;
 			}
 		}
 	}
 	
-	
+	/**
+	 * check if the input is a valid telephone number
+	 *
+	 * @param mixed $tel
+	 */
 	function parse_telephone($tel)
 	{
 		foreach ($tel as $k => $v)
 		{
 			if (ereg("^[00[1-9]{1,4}|\+[1-9]{1,4}]?[[:blank:]\./-]?(3[2-9][0-9]|0[2-9][0-9]{1,2})[[:blank:]\./-]?[0-9]{6,9}$|^$",$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= "<li>il campo $v non è un numero di telefono valido</li>";
+				$this->error_msg .= "<li>il campo $v non è un numero di telefono valido (+xx-xxxx-xxxxxxxx)</li>";
 				$this->error_input[] = $v;
 				$this->error = true;
 			}
 		}
 	}
 	
+	/**
+	 * check if the value is > of the input check
+	 *
+	 * @param mixed $max
+	 */
 	function parse_max($max)
 	{
 		foreach ($max as $num => $v)
@@ -101,6 +116,11 @@ class fcc_custom_form
 		}
 	}
 	
+	/**
+	 * check if the value is < of the input check
+	 *
+	 * @param mixed $min
+	 */
 	function parse_min($min)
 	{
 		foreach ($min as $num => $v)
@@ -118,6 +138,11 @@ class fcc_custom_form
 		}
 	}	
 	
+	/**
+	 * Parse reserved words data, removes \n and \r and validate some input
+	 *
+	 * @param mixed $form
+	 */
 	function parse_data($form = array())
 	{
 		if (count($form) > 0)
@@ -143,6 +168,13 @@ class fcc_custom_form
 		$this->form = $form;
 	}
 	
+	/**
+	 * Generate the email and check for reserved words
+	 *
+	 * @param mixed $form
+	 * @uses sendmail
+	 * @uses akismet_sendmail
+	 */
 	function compose_mail($form)
 	{
 		$from = $title = $message = $email = '';
@@ -165,6 +197,14 @@ class fcc_custom_form
 		
 	}	
 
+	/**
+	 * send the email
+	 *
+	 * @param string $message 	message text
+	 * @param string $from  	message from
+	 * @param string $email 	email to 
+	 * @param string $title 	title of the email
+	 */
 	function sendmail($message='',$from='',$email='',$title='')
 	{
 		$fcconfig = get_option('fcc_settings');
@@ -180,6 +220,16 @@ class fcc_custom_form
 			echo stripcslashes($fcconfig['message']); 
 	}	
 	
+	/**
+	 * check with akismet if the message has spam
+	 *
+	 * @param string $message 	message text
+	 * @param string $from  	message from
+	 * @param string $email 	email to 
+	 * @param string $title 	title of the email
+	 * 
+	 * @uses sendmail
+	 */
 	function akismet_sendmail($message='',$from='',$email='',$title='')
 	{
 		require_once '/wp-content/plugins/fcc/akismet.php';
@@ -202,6 +252,11 @@ class fcc_custom_form
 		
 	}
 	
+	/**
+	 * generate error output
+	 *
+	 * @param string $type can be 'mail' or 'spam' 
+	 */
 	function error_message($type = 'mail')
 	{
 		$fcconfig = get_option('fcc_settings');
@@ -232,65 +287,68 @@ function fcc_loader($data)
 		echo "missed form file<br/>";
 		echo ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
 	}
-
-	
-	$custom_form = new fcc_custom_form();	
-	if (count($_POST) > 0)
+	else 
 	{
-		if (isset($_POST['check']['required']) != '') $custom_form->parse_required(explode(',',$_POST['check']['required']));
-		if (isset($_POST['check']['integer']) != '') $custom_form->parse_integer(explode(',',$_POST['check']['integer']));
-		if (isset($_POST['check']['date']) != '') $custom_form->parse_date(explode(',',$_POST['check']['date']));
-		if (isset($_POST['check']['telephone']) != '') $custom_form->parse_telephone(explode(',',$_POST['check']['telephone']));
-		if (isset($_POST['check']['min'])) $custom_form->parse_min($_POST['check']['min']);
-		if (isset($_POST['check']['max'])) $custom_form->parse_max($_POST['check']['max']);
+		$custom_form = new fcc_custom_form();	
 		
-		$custom_form->show = false;
+		// parse the POST data and start the input validation
+		if (count($_POST) > 0)
+		{
+			if (isset($_POST['check']['required']) != '') $custom_form->parse_required(explode(',',$_POST['check']['required']));
+			if (isset($_POST['check']['integer']) != '') $custom_form->parse_integer(explode(',',$_POST['check']['integer']));
+			if (isset($_POST['check']['date']) != '') $custom_form->parse_date(explode(',',$_POST['check']['date']));
+			if (isset($_POST['check']['telephone']) != '') $custom_form->parse_telephone(explode(',',$_POST['check']['telephone']));
+			if (isset($_POST['check']['min'])) $custom_form->parse_min($_POST['check']['min']);
+			if (isset($_POST['check']['max'])) $custom_form->parse_max($_POST['check']['max']);
+		
+			$custom_form->show = false;
 					
-		if (!$custom_form->error) $custom_form->compose_mail($_POST['fcc']);
-		else $custom_form->parse_data($_POST['fcc']);
-		
-	}
+			if (!$custom_form->error) $custom_form->compose_mail($_POST['fcc']);
+			else $custom_form->parse_data($_POST['fcc']);	
+		}
 	
-	if (($custom_form->error) or ($custom_form->show))
-	{
-		if ($custom_form->error_msg != '')
+		// error output and generate javascript for effects
+		if (($custom_form->error) or ($custom_form->show))
 		{
 			$js = '';
-			$js .= "<script src='".get_bloginfo('url')."/wp-content/plugins/fcc/mootools.js' type='text/javascript' ></script>
+			
+			if ($custom_form->error_msg != '')
+			{
+				$js .= "<script src='".get_bloginfo('url')."/wp-content/plugins/fcc/mootools.js' type='text/javascript' ></script>
 					<script type='text/javascript'>
 	
 				";
 			
-			foreach ($custom_form->error_input as $k => $v)
-			{
-				$js .= "
-					var e_$v = $('fcc[$v]');
-					new Fx.Color(e_$v, 'background-color').custom('#ffffff', '#ff0000');
-				";
+				foreach ($custom_form->error_input as $k => $v)
+				{
+					$js .= "
+						var e_$v = $('fcc[$v]');
+						new Fx.Color(e_$v, 'background-color').custom('#ffffff', '#ff0000');
+					";
+				}
+			
+				foreach ($custom_form->form as $k1 => $v1)
+				{
+					$js .= "
+						var e_$k1 = $('fcc[$k1]');
+						e_$k1.value = '$v1';
+					";
+				}
+			
+				$js .= "	
+	  					</script>";
+				
+				echo "	<div class='fcc_error'>
+							<h2>Sono presenti errori nella form</h2>
+							<ul>$custom_form->error_msg</ul>
+						</div>";
 			}
-			
-			foreach ($custom_form->form as $k1 => $v1)
-			{
-				$js .= "
-					var e_$k1 = $('fcc[$k1]');
-					e_$k1.value = '$v1';
-				";
-			}
-			
-			$js .= "	
-  					</script>";
-			
-			echo "	<div class='fcc_error'>
-						<h2>Sono presenti errori nella form</h2>
-						<ul>$custom_form->error_msg</ul>
-					</div>";
-		}
 		
-		echo "<div>";
-		include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
-		echo "<br/></div>$js";
-	}	
-	
+			echo "<div>";
+			include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
+			echo "<br/></div>$js";
+		}	
+	}
 	//print_r($data);
 	//print_r($_POST);
 }
@@ -301,19 +359,25 @@ function fcc_loader($data)
 **********************************************/
 
 
-if ( ! function_exists('wp_nonce_field') ) {
-	function fcc_nonce_field($action = -1) {
+if ( ! function_exists('wp_nonce_field') ) 
+{
+	function fcc_nonce_field($action = -1) 
+	{
 		return;	
 	}
 	$fcc_nonce = -1;
-} else {
-	function fcc_nonce_field($action = -1) {
+} 
+else 
+{
+	function fcc_nonce_field($action = -1) 
+	{
 		return wp_nonce_field($action);
 	}
 	$fcc_nonce = 'fcg-save-option';
 }
 
-function fcc_config_page() {
+function fcc_config_page() 
+{
 	global $wpdb;
 	if ( function_exists('add_submenu_page') )
 		add_submenu_page('plugins.php', __('Contact Form Generator'), __('Contact Form Generator'), 'manage_options', 'fcc-conf', 'fcc_conf');
