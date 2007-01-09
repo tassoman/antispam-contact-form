@@ -19,6 +19,9 @@ class fcc_custom_form
 	var $show = true;
 	var $form = array();
 	
+	var $mailto = '';
+	var $title = '';
+	
 	/**
 	 * controllo che il campo non sia vuoto
 	 *
@@ -210,12 +213,19 @@ class fcc_custom_form
 	{
 		$fcconfig = get_option('fcc_settings');
 		
+		// get data from parameters
 		if ($from != '') $header = 'From: '.$from.' <'.$email.">\r\nX-Mailer: PHP/BeS";
-		if ($title != '') $title = ' - '.$title;
+		
+		if ($this->title != '') $title = ' - '.$this->title;
+		elseif ($title != '') $title = ' - '.$title;
+
+		// overwrite data if is passed from page
+		if ($this->mailto != '') $mailto = $this->mailto;
+		else $mailto = $fcconfig['mailto'];
 		
 		$message = stripslashes($message);
 		
-		if (!mail(get_option('fcc_to_mail'),'['.$fcconfig['subject'].$title.']',$message, $header))
+		if (!mail($mailto,'['.$fcconfig['subject'].$title.']',$message, $header))
 			$this->error_message();
 		else 
 			echo stripcslashes($fcconfig['message']); 
@@ -283,8 +293,10 @@ function fcc_replace($content) {
 function fcc_loader($data)
 {
 	$output = '';
-	
-	if (($data[1]=='') OR (!file_exists(ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php')))
+
+	$param = split(':',$data[1]);
+		
+	if (($data[1]=='') OR (!file_exists(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php')))
 	{
 		// creare il file di default
 		$output .= "missed form file<br/>";
@@ -292,7 +304,12 @@ function fcc_loader($data)
 	}
 	else 
 	{
-		$custom_form = new fcc_custom_form();	
+		// format filename:title:mailto
+		
+		$custom_form = new fcc_custom_form();
+		
+		if ((isset($param[1])) and ($param[1] != '')) {$custom_form->title = $param[1]; }
+		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
 		
 		// parse the POST data and start the input validation
 		if (count($_POST) > 0)
@@ -349,7 +366,7 @@ function fcc_loader($data)
 		
 			$output .=  "<div>";
 			//include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
-			$output .= file_get_contents(ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php',false);
+			$output .= file_get_contents(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php',false);
 			$output .=  "<br/></div>$js";
 			
 			return $output;
@@ -418,7 +435,16 @@ function fcc_conf()
 <div class="wrap">
 	<h2><?php _e('Contact Form Generator'); ?></h2>
 	<div class="">
-		<p>Add &lt;!--fcc:<em>filename</em>--&gt; in the post where you want to add the form</p>
+		<p>Add &lt;!--fcc:<em>filename</em>--&gt; in the post where you want to add the form.<br/><br/>
+		If you want to change the default title you or the default email you have to write:
+		&lt;!--fcc:<em>filename:new title:email</em>--&gt;<br/>
+		ie.<br/> 
+		<ul>
+			<li>I want to send a mail to me@mail.com: &lt;!--fcc:<em>filename::me@mail.com</em>--&gt;</li>
+			<li>I want to send a mail to me@mail.com with subject "hello world": &lt;!--fcc:<em>filename:hello world:me@mail.com</em>--&gt;</li>
+			<li>I want to send a mail with subject "hello world": &lt;!--fcc:<em>filename:hello world</em>--&gt;</li>
+		</ul>
+		</p>
 		<h3>Form lists</h3>
 		<?php 
 			$fcconfig = get_option('fcc_settings');
@@ -428,7 +454,10 @@ function fcc_conf()
    				while (false !== ($file = readdir($handle))) {
        				if ($file != "." && $file != "..") 
        				{
-           				echo "<li>&lt;!--fcc:".str_replace('.php','',$file)."--&gt;</li>";
+           				echo "<li>
+           							&lt;!--fcc:".str_replace('.php','',$file)."--&gt; -- 
+           							<a href='".get_bloginfo('url')."/wp-admin/templates.php?file=wp-content/plugins/fcc/forms/$file'>[edit]</a>
+           					  </li>";
        				}
    				}
    				closedir($handle);
