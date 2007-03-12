@@ -1,0 +1,11 @@
+#summary One-sentence summary of this page.
+#labels Featured,Phase-QA
+
+= Introduction =
+
+New development ideas
+
+
+= BotSpam traps =
+
+Il form di txp ha due campi hidden dal nome comune, phone e mail se li trova riempiti la mail non parte e li possono riempire solo i bot.
