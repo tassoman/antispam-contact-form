@@ -1,0 +1,90 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Contact Form Generator\n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: 2007-03-17 01:53+0100\n"
+"Last-Translator: Tassoman <tassoman@gmail.com>\n"
+"Language-Team: Fullo, Tassoman <http://code.google.com/p/antispam-contact-form/>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=iso-8859-1\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-Language: Italian\n"
+"X-Poedit-Country: ITALY\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-KeywordsList: _e;__\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: contact_form.php:306
+msgid "form template is missing"
+msgstr "manca la maschera del form"
+
+#: contact_form.php:368
+msgid "There are problems with the form"
+msgstr "Ci sono problemi con il modulo"
+
+#: contact_form.php:410
+#: contact_form.php:440
+msgid "Contact Form Generator"
+msgstr "Generatore di moduli email"
+
+#: contact_form.php:420
+msgid "Cheatin&#8217; uh?"
+msgstr "Vuoi fare il furbo, eh?"
+
+#: contact_form.php:442
+msgid "Please add &lt;!--fcc:<em>filename</em>--&gt; in the content of the post/page you want show the form."
+msgstr "Per favore inserisci &lt;!--fcc:<em>nomefile</em>--&gt; nel contenuto dell'articolo o della pagina, se vuoi mostrare un particolare modulo"
+
+#: contact_form.php:443
+msgid "If you want to change default subject or default address you must write as following: &lt;!--fcc:<em>filename:new title:email</em>--&gt;"
+msgstr "Se vuoi cambiare l'oggetto predefinito o l'indirizzo email predefinito, devi scrivere come segue: &lt;!--fcc:<em>nomefile:Nuovo titolo:email</em>--&gt;"
+
+#: contact_form.php:445
+msgid "To send mails to me@mail.com: &lt;!--fcc:<em>filename::me@mail.com</em>--&gt;"
+msgstr "Per inviare email a me@mail.com:  &lt;!--fcc:<em>nomefile::me@mail.com</em>--&gt;"
+
+#: contact_form.php:446
+msgid "To send mails to me@mail.com with subject \"hello world\": &lt;!--fcc:<em>filename:hello world:me@mail.com</em>--&gt;"
+msgstr "Per inviare email a me@mail.com con oggetto \"Ciao Mondo!\": &lt;!--fcc:<em>nomefile:Ciao Mondo:me@mail.com</em>--&gt;"
+
+#: contact_form.php:447
+msgid "To send mails with subject \"hello world\": &lt;!--fcc:<em>filename:hello world</em>--&gt;"
+msgstr "Per inviare e.mail con oggetto \"Ciao Mondo\":  &lt;!--fcc:<em>nomefile:Ciao Mondo</em>--&gt;"
+
+#: contact_form.php:450
+msgid "Form lists"
+msgstr "Elenco dei moduli"
+
+#: contact_form.php:462
+msgid "edit"
+msgstr "modifica"
+
+#: contact_form.php:476
+msgid "Email"
+msgstr "E-mail"
+
+#: contact_form.php:480
+msgid "Subject"
+msgstr "Oggetto"
+
+#: contact_form.php:484
+msgid "Default message"
+msgstr "Messaggio predefinito"
+
+#: contact_form.php:488
+msgid "Error message"
+msgstr "Messaggio di errore"
+
+#: contact_form.php:492
+msgid "AKISMET IS DEACTIVATED, SO THIS MESSAGE CAN`T BE USED"
+msgstr "AKISMET È DISATTIVATO, QUESTO MESSAGGIO NON PUÒ ESSERE MOSTRATO"
+
+#: contact_form.php:495
+msgid "Spam message"
+msgstr "Messaggio indesiderato"
+
+#: contact_form.php:500
+msgid "update"
+msgstr "Aggiorna"
+
