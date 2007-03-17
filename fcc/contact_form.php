@@ -11,6 +11,9 @@ Author URI: http://www.fullo.net/
 add_action('admin_menu', 'fcc_config_page');
 add_filter('the_content', 'fcc_replace');
 
+if(function_exists('load_plugin_textdomain'))
+	load_plugin_textdomain('fcc','wp-content/plugins/fcc');
+
 class fcc_custom_form
 {
 	var $error = false;
@@ -18,10 +21,10 @@ class fcc_custom_form
 	var $error_input = array();
 	var $show = true;
 	var $form = array();
-	
+
 	var $mailto = '';
 	var $title = '';
-	
+
 	/**
 	 * controllo che il campo non sia vuoto
 	 *
@@ -32,13 +35,13 @@ class fcc_custom_form
 	{
 		foreach ($required as $k => $v)
 		{
-			if ($_POST['fcc'][$v] == '') 
+			if ($_POST['fcc'][$v] == '')
 			{
-				$this->error_msg .= "<li>il campo $v è vuoto</li>";
+				$this->error_msg .= __(sprintf("<li>field %s is empty</li>", $v) , 'fcc');
 				$this->error_input[] = $v;
 				$this->error = true;
 			}
-		}	
+		}
 	}
 
 	/**
@@ -54,13 +57,13 @@ class fcc_custom_form
 			$num = $_POST['fcc'][$v];
 			if (!is_int($num))
 			{
-				$this->error_msg .= "<li>il campo $v non è un numero</li>";
+				$this->error_msg .= __( sprintf("<li>field %s is not numeric</li>", $v), 'fcc');
 				$this->error_input[] = $v;
 				$this->error = true;
 			}
-		}	
+		}
 	}
-	
+
 	/**
 	 * check if the input is a valid date (dd-mm-aaaa)
 	 *
@@ -72,13 +75,13 @@ class fcc_custom_form
 		{
 			if (ereg('^(0?[1-9]|[1-2][0-9]|3[01])[[:blank:]/\.\\-](0?[1-9]|1[0-2])[[:blank:]/\.\\-](19[3-9][0-9]|20[01][0-9])$|^$',$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= "<li>il campo $v non è una data valida (gg-mm-aaaa)</li>";
+				$this->error_msg .= __( sprintf( "<li>field %s is not a valid date (dd-mm-yyyy)</li>", $v), 'fcc');
 				$this->error_input[] = $v;
 				$this->error = true;
 			}
 		}
 	}
-	
+
 	/**
 	 * check if the input is a valid telephone number
 	 *
@@ -90,13 +93,13 @@ class fcc_custom_form
 		{
 			if (ereg("^[00[1-9]{1,4}|\+[1-9]{1,4}]?[[:blank:]\./-]?(3[2-9][0-9]|0[2-9][0-9]{1,2})[[:blank:]\./-]?[0-9]{6,9}$|^$",$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= "<li>il campo $v non è un numero di telefono valido (+xx-xxxx-xxxxxxxx)</li>";
+				$this->error_msg .= __( sprintf("<li>field %s is not a valid telephone number (+xx-xxxx-xxxxxxxx)</li>", $v), 'fcc');
 				$this->error_input[] = $v;
 				$this->error = true;
 			}
 		}
 	}
-	
+
 	/**
 	 * check if the value is > of the input check
 	 *
@@ -111,14 +114,14 @@ class fcc_custom_form
 			{
 				if ($_POST['fcc'][$valore] > $num)
 				{
-					$this->error_msg .= "<li>il campo $valore supera il valore consentito ($num)</li>";
+					$this->error_msg .= __( sprintf("<li>value %d is greater than max allowed value (%d)</li>", $valore, $num), 'fcc');
 					$this->error_input[] = $valore;
 					$this->error = true;
 				}
 			}
 		}
 	}
-	
+
 	/**
 	 * check if the value is < of the input check
 	 *
@@ -133,14 +136,14 @@ class fcc_custom_form
 			{
 				if ($_POST['fcc'][$valore] < $num)
 				{
-					$this->error_msg .= "<li>il campo $valore è inferiore al valore consentito ($num)</li>";
+					$this->error_msg .= __( sprintf("<li>value %d is lesser than min allowed value (%d)</li>", $valore, $num), 'fcc');
 					$this->error_input[] = $valore;
 					$this->error = true;
 				}
 			}
 		}
-	}	
-	
+	}
+
 	/**
 	 * Parse reserved words data, removes \n and \r and validate some input
 	 *
@@ -150,27 +153,27 @@ class fcc_custom_form
 	{
 		if (count($form) > 0)
 		foreach ($form as $key => $value)
-		{		
+		{
 			$form[$key] = strip_tags($value);
 			if (eregi('email',$key))
-			{			
+			{
 				$form[$key] = preg_replace("|[^a-z0-9@.]|i", "", urldecode($value));
 				$form[$key] = preg_replace("[\n]",'',$value);
-			} 
+			}
 			elseif (eregi('name',$key))
 			{
 				$form[$key] = preg_replace("|[^a-z0-9 \-.,]|i", "", urldecode($value));
 				$form[$key] = preg_replace("[\n]",'', $value);
-			} 		
-			else 
+			}
+			else
 			{
 				$form[$key] = preg_replace("[\n]",'',$value);
-			}	
+			}
 		}
-		
+
 		$this->form = $form;
 	}
-	
+
 	/**
 	 * Generate the email and check for reserved words
 	 *
@@ -182,102 +185,102 @@ class fcc_custom_form
 	function compose_mail($form)
 	{
 		$from = $title = $message = $email = '';
-		
+
 		$this->parse_data($form);
 
-		
+
 		foreach ($this->form as $key => $value)
-		{		
+		{
 			$message .= $key.' = '.$value."\n";
 		}
-		
+
 		// reserved words
 		if (isset($this->form['email']) != '') 	{ $email .= $this->form['email'].' ';	}
 		if (isset($this->form['name']) != '') 	{ $from  .= $this->form['name'].' ';	}
 		if (isset($this->form['title']) != '')	{ $title .= $this->form['title'].' ';	}
-		
+
 		if ((get_option('wordpress_api_key') != '') AND (file_exists('/wp-content/plugins/fcc/akismet.php'))) $this->akismet_sendmail($message,$from,$email,$title);
 		else $this->sendmail($message,$from,$email,$title);
-		
-	}	
+
+	}
 
 	/**
 	 * send the email
 	 *
 	 * @param string $message 	message text
 	 * @param string $from  	message from
-	 * @param string $email 	email to 
+	 * @param string $email 	email to
 	 * @param string $title 	title of the email
 	 */
 	function sendmail($message='',$from='',$email='',$title='')
 	{
 		$fcconfig = get_option('fcc_settings');
-		
+
 		// get data from parameters
 		if ($from != '') $header = 'From: '.$from.' <'.$email.">\r\nX-Mailer: PHP/BeS";
-		
+
 		if ($this->title != '') $title = ' - '.$this->title;
 		elseif ($title != '') $title = ' - '.$title;
 
 		// overwrite data if is passed from page
 		if ($this->mailto != '') $mailto = $this->mailto;
 		else $mailto = $fcconfig['mailto'];
-		
+
 		$message = stripslashes($message);
-		
+
 		if (!mail($mailto,'['.$fcconfig['subject'].$title.']',$message, $header))
 			$this->error_message();
-		else 
-			echo stripcslashes($fcconfig['message']); 
-	}	
-	
+		else
+			echo stripcslashes($fcconfig['message']);
+	}
+
 	/**
 	 * check with akismet if the message has spam
 	 *
 	 * @param string $message 	message text
 	 * @param string $from  	message from
-	 * @param string $email 	email to 
+	 * @param string $email 	email to
 	 * @param string $title 	title of the email
-	 * 
+	 *
 	 * @uses sendmail
 	 */
 	function akismet_sendmail($message='',$from='',$email='',$title='')
 	{
 		require_once '/wp-content/plugins/fcc/akismet.php';
-	
+
 		$akismet = new Akismet( bloginfo('blog_url') , get_option('wordpress_api_key') );
 		$akismet->setCommentAuthor($from);
 		$akismet->setCommentAuthorEmail($email);
 		$akismet->setCommentAuthorURL('');
 		$akismet->setCommentContent($message);
 		$akismet->setPermalink(bloginfo('blog_url').'/contatti');
-	
+
 		if($akismet->isSpam())
-		{ 
-			$this->error_message('spam');	 
+		{
+			$this->error_message('spam');
 		}
 		else
 		{
 			$this->sendmail($message,$from,$email,$title);
-		}	
-		
+		}
+
 	}
-	
+
 	/**
 	 * generate error output
 	 *
-	 * @param string $type can be 'mail' or 'spam' 
+	 * @param string $type can be 'mail' or 'spam'
 	 */
 	function error_message($type = 'mail')
 	{
 		$fcconfig = get_option('fcc_settings');
-		
+
 		if ($type == 'spam')
 			echo $fcconfig['message_spam'];
 		elseif ($type == 'mail')
 			echo $fcconfig['message_error'];
-	}	
-	
+	}
+
 }
 
 
@@ -295,22 +298,23 @@ function fcc_loader($data)
 	$output = '';
 
 	$param = split(':',$data[1]);
-		
+
 	if (($data[1]=='') OR (!file_exists(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php')))
 	{
 		// creare il file di default
 		$output .= "missed form file<br/>";
+		$output .= __('form template is missing','fcc') . "<br/>";
 		$output .=  ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
 	}
-	else 
+	else
 	{
 		// format filename:title:mailto
-		
+
 		$custom_form = new fcc_custom_form();
-		
+
 		if ((isset($param[1])) and ($param[1] != '')) {$custom_form->title = $param[1]; }
 		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
-		
+
 		// parse the POST data and start the input validation
 		if (count($_POST) > 0)
 		{
@@ -320,25 +324,25 @@ function fcc_loader($data)
 			if (isset($_POST['check']['telephone']) != '') $custom_form->parse_telephone(explode(',',$_POST['check']['telephone']));
 			if (isset($_POST['check']['min'])) $custom_form->parse_min($_POST['check']['min']);
 			if (isset($_POST['check']['max'])) $custom_form->parse_max($_POST['check']['max']);
-		
+
 			$custom_form->show = false;
-					
+
 			if (!$custom_form->error) $custom_form->compose_mail($_POST['fcc']);
-			else $custom_form->parse_data($_POST['fcc']);	
+			else $custom_form->parse_data($_POST['fcc']);
 		}
-	
+
 		// error output and generate javascript for effects
 		if (($custom_form->error) or ($custom_form->show))
 		{
 			$js = '';
-			
+
 			if ($custom_form->error_msg != '')
 			{
 				$js .= "<script src='".get_bloginfo('url')."/wp-content/plugins/fcc/mootools.js' type='text/javascript' ></script>
 					<script type='text/javascript'>
-	
+
 				";
-			
+
 				foreach ($custom_form->error_input as $k => $v)
 				{
 					$js .= "
@@ -346,7 +350,7 @@ function fcc_loader($data)
 						new Fx.Color(e_$v, 'background-color').custom('#ffffff', '#ff0000');
 					";
 				}
-			
+
 				foreach ($custom_form->form as $k1 => $v1)
 				{
 					$js .= "
@@ -354,23 +358,23 @@ function fcc_loader($data)
 						e_$k1.value = '$v1';
 					";
 				}
-			
-				$js .= "	
+
+				$js .= "
 	  					</script>";
-				
-				$output .=  "	<div class='fcc_error'>
-							<h2>Sono presenti errori nella form</h2>
-							<ul>$custom_form->error_msg</ul>
-						</div>";
+
+				$output .=  sprintf("	<div class='fcc_error'>
+							<h2>%s</h2>
+							<ul>%s</ul>
+						</div>" , __('There are problems with the form', $custom_form->error_msg), 'fcc');
 			}
-		
+
 			$output .=  "<div>";
 			//include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
 			$output .= file_get_contents(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php',false);
 			$output .=  "<br/></div>$js";
-			
+
 			return $output;
-		}	
+		}
 	}
 	//print_r($data);
 	//print_r($_POST);
@@ -382,50 +386,50 @@ function fcc_loader($data)
 **********************************************/
 
 
-if ( ! function_exists('wp_nonce_field') ) 
+if ( ! function_exists('wp_nonce_field') )
 {
-	function fcc_nonce_field($action = -1) 
+	function fcc_nonce_field($action = -1)
 	{
-		return;	
+		return;
 	}
 	$fcc_nonce = -1;
-} 
-else 
+}
+else
 {
-	function fcc_nonce_field($action = -1) 
+	function fcc_nonce_field($action = -1)
 	{
 		return wp_nonce_field($action);
 	}
 	$fcc_nonce = 'fcg-save-option';
 }
 
-function fcc_config_page() 
+function fcc_config_page()
 {
 	global $wpdb;
 	if ( function_exists('add_submenu_page') )
-		add_submenu_page('plugins.php', __('Contact Form Generator'), __('Contact Form Generator'), 'manage_options', 'fcc-conf', 'fcc_conf');
+		add_submenu_page('plugins.php', __('Contact Form Generator','fcc'), __('Contact Form Generator','fcc'), 'manage_options', 'fcc-conf', 'fcc_conf');
 }
 
-function fcc_conf() 
+function fcc_conf()
 {
 	global $fcc_nonce;
-	
+
 	if ( isset($_POST['submit']) )
 	{
 		if ( function_exists('current_user_can') && !current_user_can('manage_options') )
 			die(__('Cheatin&#8217; uh?'));
 
 		check_admin_referer($fcc_nonce);
-		
+
 		$data = new fcc_custom_form();
 		$data->parse_data($_POST);
-		
+
 		update_option('fcc_settings', array(
-											'mailto' => $data->form['email'], 
-											'message' => $data->form['msg'], 
-											'message_spam' => $data->form['spam'], 
-											'message_error' => $data->form['error'], 
-											'subject' => $data->form['subject'], 
+											'mailto' => $data->form['email'],
+											'message' => $data->form['msg'],
+											'message_spam' => $data->form['spam'],
+											'message_error' => $data->form['error'],
+											'subject' => $data->form['subject'],
 											)
 						);
 	}
@@ -433,71 +437,69 @@ function fcc_conf()
 ?>
 
 <div class="wrap">
-	<h2><?php _e('Contact Form Generator'); ?></h2>
+	<h2><?php _e('Contact Form Generator','fcc'); ?></h2>
 	<div class="">
-		<p>Add &lt;!--fcc:<em>filename</em>--&gt; in the post where you want to add the form.<br/><br/>
-		If you want to change the default title you or the default email you have to write:
-		&lt;!--fcc:<em>filename:new title:email</em>--&gt;<br/>
-		ie.<br/> 
+		<p><?php _e('Please add &lt;!--fcc:<em>filename</em>--&gt; in the content of the post/page you want show the form.', 'fcc');?></p>
+		<p><?php _e('If you want to change default subject or default address you must write as following: &lt;!--fcc:<em>filename:new title:email</em>--&gt;','fcc');?></p>
 		<ul>
-			<li>I want to send a mail to me@mail.com: &lt;!--fcc:<em>filename::me@mail.com</em>--&gt;</li>
-			<li>I want to send a mail to me@mail.com with subject "hello world": &lt;!--fcc:<em>filename:hello world:me@mail.com</em>--&gt;</li>
-			<li>I want to send a mail with subject "hello world": &lt;!--fcc:<em>filename:hello world</em>--&gt;</li>
+			<li><?php _e('To send mails to me@mail.com: &lt;!--fcc:<em>filename::me@mail.com</em>--&gt;','fcc');?></li>
+			<li><?php _e('To send mails to me@mail.com with subject "hello world": &lt;!--fcc:<em>filename:hello world:me@mail.com</em>--&gt;', 'fcc');?></li>
+			<li><?php _e('To send mails with subject "hello world": &lt;!--fcc:<em>filename:hello world</em>--&gt;','fcc');?></li>
 		</ul>
 		</p>
-		<h3>Form lists</h3>
-		<?php 
+		<h3><?php _e('Form lists','fcc');?></h3>
+		<?php
 			$fcconfig = get_option('fcc_settings');
-			if ($handle = opendir(ABSPATH.'/wp-content/plugins/fcc/forms/')) 
+			if ($handle = opendir(ABSPATH.'/wp-content/plugins/fcc/forms/'))
 			{
 				echo "<ul>";
    				while (false !== ($file = readdir($handle))) {
-       				if ($file != "." && $file != "..") 
+       				if ($file != "." && $file != "..")
        				{
-           				echo "<li>
-           							&lt;!--fcc:".str_replace('.php','',$file)."--&gt; -- 
-           							<a href='".get_bloginfo('url')."/wp-admin/templates.php?file=wp-content/plugins/fcc/forms/$file'>[edit]</a>
-           					  </li>";
+           				echo sprintf("<li>
+           							&lt;!--fcc:%s--&gt; --
+           							<a href='%s/wp-admin/templates.php?file=wp-content/plugins/fcc/forms/%s'>[%s]</a>
+           					  </li>", str_replace('.php','',$file), get_bloginfo('url'), $file, __('edit') );
        				}
    				}
    				closedir($handle);
    				echo "</ul>";
-			} 
+			}
 		?>
-	</div>	
+	</div>
 	<hr/>
 
 	<form action="" method="post" id="fcc-conf" style="width: 400px; ">
-	
+
 		<?php fcc_nonce_field($fcc_nonce) ?>
 		<p>
-			<h3><label for="email"><?php _e('Email'); ?></label></h3>
+			<h3><label for="email"><?php _e('Email','fcc'); ?></label></h3>
 			<input id="email" name="email" type="text" size="24" maxlength="128" value="<?php echo $fcconfig['mailto']; ?>" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;" />
 		</p>
 		<p>
-			<h3>Subject</h3>
+			<h3><label for="subject"><?php _e('Subject','fcc');?></label></h3>
 			<input id="subject" name="subject" type="text" size="24" maxlength="64" value="<?php echo $fcconfig['subject']; ?>" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;" />
 		</p>
 		<p>
-			<h3>messaggio default</h3>
+			<h3><label for="msg"><?php echo _e('Default message','fcc');?></label></h3>
 			<textarea id="msg" name="msg" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message']); ?></textarea>
 		</p>
 		<p>
-			<h3>messaggio di errore</h3>
+			<h3><label for="msg"><?php echo _e('Error message','fcc');?></label></h3>
 			<textarea id="error" name="error" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message_error']); ?></textarea>
 		</p>
 		<?php if (get_option('wordpress_api_key') != '') { ?>
-		<p><h3 style="color:red">AKISMET E' DISATTIVATO IL MESSAGGIO NON VERRA' USATO!</h3></p>
-		<?php } ?>		
+		<p><h3 style="color:red"><?php _e('AKISMET IS DEACTIVATED, SO THIS MESSAGE CAN`T BE USED','fcc');?></h3></p>
+		<?php } ?>
 		<p>
-			<h3>messaggio di spam</h3>
+			<h3><label for="msg"><?php echo _e('Spam message','fcc');?></label></h3>
 			<textarea id="spam" name="spam" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message_spam']); ?></textarea>
 		</p>
 
 		<p>
-			<input type="submit" name="submit" value="aggiorna i dati" />
+			<input type="submit" name="submit" value="<?php _e('update');?>" />
 		</p>
-	
+
 	</form>
 </div>
 <?php
