@@ -3,7 +3,7 @@
 Plugin Name: Contact Form Generator
 Plugin URI: http://www.fullo.net
 Description: This contact form accept any data from your site and send as email to you
-Version: 0.4
+Version: 0.4.1
 Author: Francesco Fullone
 Author URI: http://www.fullo.net/
 */
@@ -224,19 +224,14 @@ class fcc_custom_form
 		foreach ($form as $key => $value)
 		{
 			$form[$key] = strip_tags($value);
+			$form[$key] = preg_replace("[\n]",' ',$value);
 			if (eregi('email',$key))
 			{
-				$form[$key] = preg_replace("|[^a-z0-9@.]|i", "", urldecode($value));
-				$form[$key] = preg_replace("[\n]",'',$value);
+				$form[$key] = preg_replace("|[^a-z0-9@.]|i", "", urldecode($value));				
 			}
 			elseif (eregi('name',$key))
 			{
-				$form[$key] = preg_replace("|[^a-z0-9 \-.,]|i", "", urldecode($value));
-				$form[$key] = preg_replace("[\n]",'', $value);
-			}
-			else
-			{
-				$form[$key] = preg_replace("[\n]",'',$value);
+				$form[$key] = preg_replace("|[^a-z0-9 \-.,]|i", "", urldecode($value));				
 			}
 		}
 
@@ -263,13 +258,9 @@ class fcc_custom_form
 			$message .= $key.' = '.$value."\n";
 		}
 
-		// reserved words
-		if (isset($this->form['email']) != '') 	{ $email .= $this->form['email'].' ';	}
-		if (isset($this->form['name']) != '') 	{ $from  .= $this->form['name'].' ';	}
-		if (isset($this->form['title']) != '')	{ $title .= $this->form['title'].' ';	}
-
-		if ((get_option('wordpress_api_key') != '') AND (file_exists('/wp-content/plugins/fcc/akismet.php'))) $this->akismet_sendmail($message,$from,$email,$title);
-		else $this->sendmail($message,$from,$email,$title);
+		if ($message != '')
+			if ((get_option('wordpress_api_key') != '') AND (file_exists('/wp-content/plugins/fcc/akismet.php'))) $this->akismet_sendmail($message,$from,$email,$title);
+			else $this->sendmail($message,$from,$email,$title);
 
 	}
 
@@ -289,7 +280,7 @@ class fcc_custom_form
 		if ($from != '') $header = 'From: '.$from.' <'.$email.">\r\nX-Mailer: PHP/BeS";
 
 		if ($this->title != '') $title = ' - '.$this->title;
-		elseif ($title != '') $title = ' - '.$title;
+		elseif ($title != '') $title = $title;
 
 		// overwrite data if is passed from page
 		if ($this->mailto != '') $mailto = $this->mailto;
@@ -297,7 +288,7 @@ class fcc_custom_form
 
 		$message = stripslashes($message);
 
-		if (!mail($mailto,'['.$fcconfig['subject'].$title.']',$message, $header))
+		if (!mail($mailto,'['.$fcconfig['subject'].' '.$title.']',$message, $header))
 			$this->error_message();
 		else
 			echo stripcslashes($fcconfig['message']);
@@ -409,11 +400,11 @@ function fcc_loader($data)
 			if (isset($_POST['check']['email'])) $custom_form->parse_mail(explode(',',$_POST['check']['email']));
 
 			// this is a simple spambot blocker
-			if (isset($_POST['email']) && ($_POST['email']!='')) $custom_form->error = true;
-			if (isset($_POST['mail']) && ($_POST['mail']!='')) $custom_form->error = true;
-			if (isset($_POST['name']) && ($_POST['name']!='')) $custom_form->error = true;
-			if (isset($_POST['subject']) && ($_POST['subject']!='')) $custom_form->error = true;
-			
+			if (isset($_POST['email']) && ($_POST['email']!='')) { $custom_form->error = true; $this->error_msg .= __( "<li>This is spam</li>", 'fcc'); }
+			if (isset($_POST['mail']) && ($_POST['mail']!='')) { $custom_form->error = true; $this->error_msg .= __( "<li>This is spam</li>", 'fcc'); }
+			if (isset($_POST['name']) && ($_POST['name']!='')) { $custom_form->error = true; $this->error_msg .= __( "<li>This is spam</li>", 'fcc'); }
+			if (isset($_POST['subject']) && ($_POST['subject']!='')) { $custom_form->error = true; $this->error_msg .= __( "<li>This is spam</li>", 'fcc'); }
+								
 			$custom_form->show = false;
 
 			if (!$custom_form->error) $custom_form->compose_mail($_POST['fcc']);
