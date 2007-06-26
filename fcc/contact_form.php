@@ -8,6 +8,10 @@ Author: Francesco Fullone
 Author URI: http://www.fullo.net/
 */
 
+define(FCC_FORM_PATH,ABSPATH.'/wp-content/plugins/fcc/forms/');
+define(FCC_SUCCESS_PATH,ABSPATH.'/wp-content/plugins/fcc/success/');
+define(FCC_ERROR_PATH,ABSPATH.'/wp-content/plugins/fcc/errors/');
+
 add_action('admin_menu', 'fcc_config_page');
 add_filter('the_content', 'fcc_replace');
 
@@ -24,7 +28,11 @@ class fcc_custom_form
 
 	var $mailto = '';
 	var $title = '';
-
+	
+	var $template = '';
+	
+	var $config = array();
+	
 	/**
 	 * controllo che il campo non sia vuoto
 	 *
@@ -154,7 +162,7 @@ class fcc_custom_form
 		if (count($form) > 0)
 		foreach ($form as $key => $value)
 		{
-			$form[$key] = strip_tags($value);
+			$form[$key] = attribute_escape($value);
 			if (eregi('email',$key))
 			{
 				$form[$key] = preg_replace("|[^a-z0-9@.]|i", "", urldecode($value));
@@ -199,8 +207,8 @@ class fcc_custom_form
 		if (isset($this->form['name']) != '') 	{ $from  .= $this->form['name'].' ';	}
 		if (isset($this->form['title']) != '')	{ $title .= $this->form['title'].' ';	}
 
-		if ((get_option('wordpress_api_key') != '') AND (file_exists('/wp-content/plugins/fcc/akismet.php'))) $this->akismet_sendmail($message,$from,$email,$title);
-		else $this->sendmail($message,$from,$email,$title);
+		if ((get_option('wordpress_api_key') != '') AND (file_exists('/wp-content/plugins/fcc/akismet.php'))) return $this->akismet_sendmail($message,$from,$email,$title);
+		else return $this->sendmail($message,$from,$email,$title);
 
 	}
 
@@ -211,26 +219,26 @@ class fcc_custom_form
 	 * @param string $from  	message from
 	 * @param string $email 	email to
 	 * @param string $title 	title of the email
+	 * 
+	 * @return string 
 	 */
 	function sendmail($message='',$from='',$email='',$title='')
 	{
-		$fcconfig = get_option('fcc_settings');
-
 		// get data from parameters
-		$header = 'From: '.get_bloginfo('name').' <'.$fcconfig['mailto'].">\r\nX-Mailer: PHP/BeS";
+		$header = 'From: '.get_bloginfo('name').' <'.$this->config['mailto'].">\r\nX-Mailer: PHP/BeS";
 
 		if ($this->title != '') $title = $this->title;
 		
 		// overwrite data if is passed from page
 		if ($this->mailto != '') $mailto = $this->mailto;
-		else $mailto = $fcconfig['mailto'];
+		else $mailto = $this->config['mailto'];
 
 		$message = stripslashes($message);
 
-		if (!mail($mailto,'['.$title.' '.$fcconfig['subject'].']',$message, $header))
-			$this->error_message();
+		if (!mail($mailto,'['.$title.' '.$this->config['subject'].']',$message, $header))
+			return $this->error_message();
 		else
-			echo stripcslashes($fcconfig['message']);
+			return $this->success_message();
 	}
 
 	/**
@@ -256,28 +264,49 @@ class fcc_custom_form
 
 		if($akismet->isSpam())
 		{
-			$this->error_message('spam');
+			return $this->error_message('spam');
 		}
 		else
 		{
-			$this->sendmail($message,$from,$email,$title);
+			return $this->sendmail($message,$from,$email,$title);
 		}
 
 	}
 
+	/**
+	 * return the success message for a form, if the success
+	 * file exist the method parse it and return it with the new
+	 * values
+	 *
+	 * @return string $success_message
+	 */
+	function success_message()
+	{
+
+		if (is_file(FCC_SUCCESS_PATH.$this->template.'.php'))
+		{
+			$success = file_get_contents(FCC_SUCCESS_PATH.$this->template.'.php',false);
+			foreach ($this->form as $k => $v)
+			{
+				$success = str_replace('%%'.strtoupper($k).'%%',$v,$success);
+			}
+			return $success;
+		}
+		else 
+			return stripcslashes($this->config['message']);
+	}
+	
 	/**
 	 * generate error output
 	 *
 	 * @param string $type can be 'mail' or 'spam'
 	 */
 	function error_message($type = 'mail')
-	{
-		$fcconfig = get_option('fcc_settings');
-
+	{		
 		if ($type == 'spam')
-			echo $fcconfig['message_spam'];
+			return $this->config['message_spam'];
 		elseif ($type == 'mail')
-			echo $fcconfig['message_error'];
+			return $this->config['message_error'];
 	}
 
 }
@@ -298,22 +327,24 @@ function fcc_loader($data)
 
 	$param = split(':',$data[1]);
 
-	if (($data[1]=='') OR (!file_exists(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php')))
+	if (($data[1]=='') OR (!file_exists(FCC_FORM_PATH.$param[0].'.php')))
 	{
 		// creare il file di default
 		$output .= "missed form file<br/>";
 		$output .= __('form template is missing','fcc') . "<br/>";
-		$output .=  ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
+		$output .=  FCC_FORM_PATH.$data[1].'.php';
 	}
 	else
 	{
 		// format filename:title:mailto
-
-		$custom_form = new fcc_custom_form();
-
 		if ((isset($param[1])) and ($param[1] != '')) {$custom_form->title = $param[1]; }
 		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
 
+		$custom_form = new fcc_custom_form();
+		$custom_form->template = $param[0];
+		$custom_form->config = get_option('fcc_settings');
+		
+		
 		// parse the POST data and start the input validation
 		if (count($_POST) > 0)
 		{
@@ -326,7 +357,7 @@ function fcc_loader($data)
 
 			$custom_form->show = false;
 
-			if (!$custom_form->error) $custom_form->compose_mail($_POST['fcc']);
+			if (!$custom_form->error) echo $custom_form->compose_mail($_POST['fcc']);
 			else $custom_form->parse_data($_POST['fcc']);
 		}
 
@@ -364,12 +395,12 @@ function fcc_loader($data)
 				$output .=  sprintf("	<div class='fcc_error'>
 							<h2>%s</h2>
 							<ul>%s</ul>
-						</div>" , __('There are problems with the form', $custom_form->error_msg), 'fcc');
+						</div>" , __('There are problems with the form', 'fcc'),  $custom_form->error_msg);
 			}
 
 			$output .=  "<div>";
-			//include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
-			$output .= file_get_contents(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php',false);
+			//include_once FCC_FORM_PATH.$data[1].'.php';
+			$output .= file_get_contents(FCC_FORM_PATH.$param[0].'.php',false);
 			$output .=  "<br/></div>$js";
 
 			return $output;
@@ -449,7 +480,7 @@ function fcc_conf()
 		<h3><?php _e('Form lists','fcc');?></h3>
 		<?php
 			$fcconfig = get_option('fcc_settings');
-			if ($handle = opendir(ABSPATH.'/wp-content/plugins/fcc/forms/'))
+			if ($handle = opendir(FCC_FORM_PATH))
 			{
 				echo "<ul>";
    				while (false !== ($file = readdir($handle))) {
