@@ -3,7 +3,7 @@
 Plugin Name: Contact Form Generator
 Plugin URI: http://www.fullo.net
 Description: This contact form accept any data from your site and send as email to you
-Version: 0.4
+Version: 0.4.2
 Author: Francesco Fullone
 Author URI: http://www.fullo.net/
 */
@@ -54,7 +54,7 @@ class fcc_custom_form
 	{
 		foreach ($integer as $k => $v)
 		{
-			$num = $_POST['fcc'][$v];
+			$num = intval($_POST['fcc'][$v]);
 			if (!is_int($num))
 			{
 				$this->error_msg .= __( sprintf("<li>field %s is not numeric</li>", $v), 'fcc');
@@ -144,75 +144,6 @@ class fcc_custom_form
 		}
 	}
 
-	/**
-	 * check if the value is a correct email
-	 *
-	 * @param mixed $mail
-	 */
-	function parse_mail($mail)
-	{
-		foreach ($mail as $k => $v)
-		{
-			if (!$this->check_email_address($_POST['fcc'][$v]))
-			{
-				$this->error_msg .= __( sprintf("<li>field %s is not a valid email</li>", $v), 'fcc');
-				$this->error_input[] = $v;
-				$this->error = true;
-			}		
-		}
-	}
-	
-	/**
-	 * parse the email and check if is correct
-	 * http://www.ilovejackdaniels.com/php/email-address-validation/
-	 *
-	 * @param string $email
-	 * @return boolean
-	 */
-	function check_email_address($email) 
-	{
- 		// First, we check that there's one @ symbol, and that the lengths are right
- 		
-	 	// Email invalid because wrong number of characters in one section, or wrong number of @ symbols.
- 		if (!ereg("^[^@]{1,64}@[^@]{1,255}$", $email)) 
- 		{		
-			return false;
-		}
-		
-		// Split it into sections to make life easier
-		$email_array = explode("@", $email);
-		$local_array = explode(".", $email_array[0]);
-		
-		for ($i = 0; $i < sizeof($local_array); $i++) 
-		{
-			if (!ereg("^(([A-Za-z0-9!#$%&'*+/=?^_`{|}~-][A-Za-z0-9!#$%&'*+/=?^_`{|}~\.-]{0,63})|(\"[^(\\|\")]{0,62}\"))$", $local_array[$i])) 
-			{
-				return false;
-			}
-		}
-		
-		// Check if domain is IP. If not, it should be valid domain name
-		if (!ereg("^\[?[0-9\.]+\]?$", $email_array[1])) 
-		{ 
-			$domain_array = explode(".", $email_array[1]);
-			if (sizeof($domain_array) < 2) 
-			{
-				return false; // Not enough parts to domain
-			}
-
-			for ($i = 0; $i < sizeof($domain_array); $i++) 
-			{
-				if (!ereg("^(([A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9])|([A-Za-z0-9]+))$", $domain_array[$i])) 
-				{
-					return false;
-				}
-			}
-		}
-		
-		return true;
-	 }
-	
-	
 	/**
 	 * Parse reserved words data, removes \n and \r and validate some input
 	 *
@@ -357,22 +288,10 @@ class fcc_custom_form
 * HERE START THE WP FRONTEND CONFIG FUNCTIONS *
 **********************************************/
 
-/**
- * Parse the content to search the fcc placer
- *
- * @param string $content
- * @return string $content
- */
 function fcc_replace($content) {
 	return preg_replace_callback("/<!--fcc:(.*)-->/", "fcc_loader", $content);
 }
 
-/**
- * The main plugin loader
- *
- * @param string $data is the old content of the post
- * @return string $output is the new content
- */
 function fcc_loader($data)
 {
 	$output = '';
@@ -396,7 +315,6 @@ function fcc_loader($data)
 		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
 
 		// parse the POST data and start the input validation
-		// move all in a custom_form init method 
 		if (count($_POST) > 0)
 		{
 			if (isset($_POST['check']['required']) != '') $custom_form->parse_required(explode(',',$_POST['check']['required']));
@@ -405,14 +323,7 @@ function fcc_loader($data)
 			if (isset($_POST['check']['telephone']) != '') $custom_form->parse_telephone(explode(',',$_POST['check']['telephone']));
 			if (isset($_POST['check']['min'])) $custom_form->parse_min($_POST['check']['min']);
 			if (isset($_POST['check']['max'])) $custom_form->parse_max($_POST['check']['max']);
-			if (isset($_POST['check']['email'])) $custom_form->parse_mail(explode(',',$_POST['check']['email']));
 
-			// this is a simple spambot blocker
-			if (isset($_POST['email']) && ($_POST['email']!='')) $custom_form->error = true;
-			if (isset($_POST['mail']) && ($_POST['mail']!='')) $custom_form->error = true;
-			if (isset($_POST['name']) && ($_POST['name']!='')) $custom_form->error = true;
-			if (isset($_POST['subject']) && ($_POST['subject']!='')) $custom_form->error = true;
-			
 			$custom_form->show = false;
 
 			if (!$custom_form->error) $custom_form->compose_mail($_POST['fcc']);
@@ -426,7 +337,6 @@ function fcc_loader($data)
 
 			if ($custom_form->error_msg != '')
 			{
-				// load of the js
 				$js .= "<script src='".get_bloginfo('url')."/wp-content/plugins/fcc/mootools.js' type='text/javascript' ></script>
 					<script type='text/javascript'>
 
@@ -457,13 +367,11 @@ function fcc_loader($data)
 						</div>" , __('There are problems with the form', $custom_form->error_msg), 'fcc');
 			}
 
-			// this include the form file in the post
 			$output .=  "<div>";
+			//include_once ABSPATH.'/wp-content/plugins/fcc/forms/'.$data[1].'.php';
 			$output .= file_get_contents(ABSPATH.'/wp-content/plugins/fcc/forms/'.$param[0].'.php',false);
 			$output .=  "<br/></div>$js";
 
-			$output = str_ireplace('</form>','<input type="hidden" name="subject" value="" /><input type="hidden" name="name" value="" /><input type="hidden" name="email" value="" /><input type="hidden" name="mail" value="" /></form>',$output);
-			
 			return $output;
 		}
 	}
@@ -579,7 +487,7 @@ function fcc_conf()
 			<h3><label for="msg"><?php echo _e('Error message','fcc');?></label></h3>
 			<textarea id="error" name="error" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message_error']); ?></textarea>
 		</p>
-		<?php if (get_option('wordpress_api_key') == '') { ?>
+		<?php if (get_option('wordpress_api_key') != '') { ?>
 		<p><h3 style="color:red"><?php _e('AKISMET IS DEACTIVATED, SO THIS MESSAGE CAN`T BE USED','fcc');?></h3></p>
 		<?php } ?>
 		<p>
