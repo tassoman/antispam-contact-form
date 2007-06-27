@@ -336,12 +336,13 @@ function fcc_loader($data)
 	}
 	else
 	{
+		$custom_form = new fcc_custom_form();
+		
 		// format filename:title:mailto
+		$custom_form->template = $param[0];
 		if ((isset($param[1])) and ($param[1] != '')) {$custom_form->title = $param[1]; }
 		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
-
-		$custom_form = new fcc_custom_form();
-		$custom_form->template = $param[0];
+		
 		$custom_form->config = get_option('fcc_settings');
 		
 		
