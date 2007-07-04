@@ -3,7 +3,7 @@
 Plugin Name: Contact Form Generator
 Plugin URI: http://www.fullo.net
 Description: This contact form accept any data from your site and send as email to you
-Version: 0.4.2
+Version: 0.4.3
 Author: Francesco Fullone
 Author URI: http://www.fullo.net/
 */
@@ -25,6 +25,7 @@ class fcc_custom_form
 	var $error_input = array();
 	var $show = true;
 	var $form = array();
+	var $page = '';
 
 	var $mailto = '';
 	var $title = '';
@@ -196,7 +197,8 @@ class fcc_custom_form
 
 		$this->parse_data($form);
 
-
+		
+		$message = __('Message from page: ').$this->page."\n";
 		foreach ($this->form as $key => $value)
 		{
 			$message .= $key.' = '.$value."\n";
@@ -260,7 +262,7 @@ class fcc_custom_form
 		$akismet->setCommentAuthorEmail($email);
 		$akismet->setCommentAuthorURL('');
 		$akismet->setCommentContent($message);
-		$akismet->setPermalink(bloginfo('blog_url').'/contatti');
+		$akismet->setPermalink($this->page);
 
 		if($akismet->isSpam())
 		{
@@ -344,7 +346,7 @@ function fcc_loader($data)
 		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
 		
 		$custom_form->config = get_option('fcc_settings');
-		
+		$custom_form->page = get_permalink();
 		
 		// parse the POST data and start the input validation
 		if (count($_POST) > 0)
