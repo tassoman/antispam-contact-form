@@ -1,5 +1,5 @@
-#labels howto,Phase-Deploy,Phase-Implementation
-#how to use the exec class 
+#labels howto,Phase-Deploy,Phase-Implementation,Featured
+how to use the exec class 
 
 = Introduction =
 
@@ -49,6 +49,5 @@ Because we don't need other functionality will create empty methods.
  public function execute() { }
 }
 }}}
-
 
 
