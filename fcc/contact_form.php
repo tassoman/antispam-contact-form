@@ -8,9 +8,11 @@ Author: Francesco Fullone
 Author URI: http://www.fullo.net/
 */
 
-define(FCC_FORM_PATH,ABSPATH.'/wp-content/plugins/fcc/forms/');
-define(FCC_SUCCESS_PATH,ABSPATH.'/wp-content/plugins/fcc/success/');
-define(FCC_ERROR_PATH,ABSPATH.'/wp-content/plugins/fcc/errors/');
+define(FCC_PATH, ABSPATH.'/wp-content/plugins/fcc/');
+define(FCC_FORM_PATH,FCC_PATH.'/forms/');
+define(FCC_SUCCESS_PATH,FCC_PATH.'success/');
+define(FCC_ERROR_PATH,FCC_PATH.'errors/');
+define(FCC_EXEC_PATH,FCC_PATH.'exec/');
 
 add_action('admin_menu', 'fcc_config_page');
 add_filter('the_content', 'fcc_replace');
@@ -18,6 +20,10 @@ add_filter('the_content', 'fcc_replace');
 if(function_exists('load_plugin_textdomain'))
 	load_plugin_textdomain('fcc','wp-content/plugins/fcc');
 
+/**
+ * @TODO add the honeypot again!
+ *
+ */
 class fcc_custom_form
 {
 	var $error = false;
@@ -31,134 +37,62 @@ class fcc_custom_form
 	var $title = '';
 	
 	var $template = '';
+	var $templateForm = '';
 	
 	var $config = array();
+	var $execute = '';
+	var $parser = '';
+	var $executeClass = '';
+	
+	var $honeypot = true;
+	var $honeypotinput = array('email','e-mail','mail','name','surname');
 	
 	/**
-	 * controllo che il campo non sia vuoto
+	 * The parser method call the fcc_ParseForm class
+	 * that will check if the data is correct
 	 *
-	 * @param mixed $required
-	 * @return text
+	 * @param string $type the type of the parser
+	 * @param mixed array $data the array with the form input field names
+	 * 
+	 * @TODO rimuovere i metodi di parsing interni (min, max)
+	 * @TODO evitare di ricreare ogni volta l'oggetto parser
 	 */
-	function parse_required($required)
+	function execParser($type,$data = array())
 	{
-		foreach ($required as $k => $v)
+		include_once(FCC_PATH.'parse_form.php');
+		
+		// add the parser function
+		if ((is_object($this->execute)) and (method_exists($this->executeClass,"preParser")))
+			$this->execute->preParser(); 
+		
+		if (!is_object($this->parser))
+			$this->parser = new fcc_parseForm;
+		
+		if (method_exists("fcc_parseForm",$type))
 		{
-			if ($_POST['fcc'][$v] == '')
-			{
-				$this->error_msg .= __(sprintf("<li>field %s is empty</li>", $v) , 'fcc');
-				$this->error_input[] = $v;
-				$this->error = true;
-			}
+			$this->parser->$type($data);			
+			
+			$this->error =  $this->parser->error;
+			$this->error_msg = $this->parser->error_msg;
+			$this->error_input = $this->parser->error_input;
 		}
-	}
+		else
+		{			
+			die("cannot load fcc_parseForm::$type method");
+		}
+		
+		if ((is_object($this->execute)) and (method_exists($this->executeClass,"postParser")))
+			$this->execute->postParser(); 
 
-	/**
-	 * check if the input is an integer
-	 *
-	 * @param mixed $integer
-	 * @return text
-	 */
-	function parse_integer($integer)
-	{
-		foreach ($integer as $k => $v)
-		{
-			$num = intval($_POST['fcc'][$v]);
-			if (!is_int($num))
-			{
-				$this->error_msg .= __( sprintf("<li>field %s is not numeric</li>", $v), 'fcc');
-				$this->error_input[] = $v;
-				$this->error = true;
-			}
-		}
 	}
-
-	/**
-	 * check if the input is a valid date (dd-mm-aaaa)
-	 *
-	 * @param mixed $date
-	 */
-	function parse_date($date)
-	{
-		foreach ($date as $k => $v)
-		{
-			if (ereg('^(0?[1-9]|[1-2][0-9]|3[01])[[:blank:]/\.\\-](0?[1-9]|1[0-2])[[:blank:]/\.\\-](19[3-9][0-9]|20[01][0-9])$|^$',$_POST['fcc'][$v]))
-			{
-				$this->error_msg .= __( sprintf( "<li>field %s is not a valid date (dd-mm-yyyy)</li>", $v), 'fcc');
-				$this->error_input[] = $v;
-				$this->error = true;
-			}
-		}
-	}
-
-	/**
-	 * check if the input is a valid telephone number
-	 *
-	 * @param mixed $tel
-	 */
-	function parse_telephone($tel)
-	{
-		foreach ($tel as $k => $v)
-		{
-			if (ereg("^[00[1-9]{1,4}|\+[1-9]{1,4}]?[[:blank:]\./-]?(3[2-9][0-9]|0[2-9][0-9]{1,2})[[:blank:]\./-]?[0-9]{6,9}$|^$",$_POST['fcc'][$v]))
-			{
-				$this->error_msg .= __( sprintf("<li>field %s is not a valid telephone number (+xx-xxxx-xxxxxxxx)</li>", $v), 'fcc');
-				$this->error_input[] = $v;
-				$this->error = true;
-			}
-		}
-	}
-
-	/**
-	 * check if the value is > of the input check
-	 *
-	 * @param mixed $max
-	 */
-	function parse_max($max)
-	{
-		foreach ($max as $num => $v)
-		{
-			$campo = explode(',',$v);
-			foreach ($campo as $id => $valore)
-			{
-				if ($_POST['fcc'][$valore] > $num)
-				{
-					$this->error_msg .= __( sprintf("<li>value %d is greater than max allowed value (%d)</li>", $valore, $num), 'fcc');
-					$this->error_input[] = $valore;
-					$this->error = true;
-				}
-			}
-		}
-	}
-
-	/**
-	 * check if the value is < of the input check
-	 *
-	 * @param mixed $min
-	 */
-	function parse_min($min)
-	{
-		foreach ($min as $num => $v)
-		{
-			$campo = explode(',',$v);
-			foreach ($campo as $id => $valore)
-			{
-				if ($_POST['fcc'][$valore] < $num)
-				{
-					$this->error_msg .= __( sprintf("<li>value %d is lesser than min allowed value (%d)</li>", $valore, $num), 'fcc');
-					$this->error_input[] = $valore;
-					$this->error = true;
-				}
-			}
-		}
-	}
+	
 
 	/**
 	 * Parse reserved words data, removes \n and \r and validate some input
 	 *
 	 * @param mixed $form
 	 */
-	function parse_data($form = array())
+	function setForm($form = array())
 	{
 		if (count($form) > 0)
 		foreach ($form as $key => $value)
@@ -191,13 +125,10 @@ class fcc_custom_form
 	 * @uses akismet_sendmail
 	 * @todo ricontrollare il funzionamento delle reserved words
 	 */
-	function compose_mail($form)
+	function compose_mail()
 	{
 		$from = $title = $message = $email = '';
 
-		$this->parse_data($form);
-
-		
 		$message = __('Message from page: ').$this->page."\n";
 		foreach ($this->form as $key => $value)
 		{
@@ -237,10 +168,16 @@ class fcc_custom_form
 
 		$message = stripslashes($message);
 
-		if (!mail($mailto,'['.$title.' '.$this->config['subject'].']',$message, $header))
+		if ((is_object($this->execute)) and (method_exists($this->executeClass,"setupMailer")))
+			$this->execute->setupMailer();
+		
+		if (!wp_mail($mailto,'['.$title.' '.$this->config['subject'].']',$message, $header))
 			return $this->error_message();
 		else
+		{
 			return $this->success_message();
+		}
+			
 	}
 
 	/**
@@ -279,6 +216,8 @@ class fcc_custom_form
 	 * return the success message for a form, if the success
 	 * file exist the method parse it and return it with the new
 	 * values
+	 * 
+	 * the values inside the success file must be saved as %%INPUT_ID%%
 	 *
 	 * @return string $success_message
 	 */
@@ -292,6 +231,7 @@ class fcc_custom_form
 			{
 				$success = str_replace('%%'.strtoupper($k).'%%',$v,$success);
 			}
+			
 			return $success;
 		}
 		else 
@@ -311,6 +251,93 @@ class fcc_custom_form
 			return $this->config['message_error'];
 	}
 
+	/**
+	 * This method load th fcc_formExec Class and
+	 * execute it's own method execute
+	 *
+	 */	
+	function setExecute()
+	{
+		if (is_file(FCC_EXEC_PATH.$this->template.'.php'))
+		{
+			include_once(FCC_PATH.'exec_form.php');
+			include_once(FCC_EXEC_PATH.$this->template.'.php');
+			
+			if (class_exists("fcc_formExec_{$this->template}"))
+			{
+				$className = "fcc_formExec_".$this->template;
+				
+				$this->executeClass = $className;
+				$this->execute = new $className;
+				$this->execute->setData(&$this->form);
+			}
+			else 
+				die("error the class fcc_formExec_".$this->template." doesn't exists");
+			
+		}	
+	}
+	
+	/**
+	 * Initialize del object
+	 *
+	 * @param mixed $param array(0=>filename,1=>title,2=>mailto)
+	 */
+	public function init($param = array())
+	{
+		// format filename:title:mailto
+		$this->template = $param[0];
+		if ((isset($param[1])) and ($param[1] != '')) {$this->title = $param[1]; }
+		if ((isset($param[2])) and ($param[2] != '')) {$this->mailto = $param[2]; }
+		
+		$this->config = get_option('fcc_settings');
+		$this->page = get_permalink();
+	}
+	
+	/**
+	 * Return the template form html
+	 *
+	 * @return string template form html
+	 */
+	public function getTemplateForm()
+	{
+		$this->templateForm = file_get_contents(FCC_FORM_PATH.$this->template.'.php',false);
+		if ($this->honeypot) $this->addHoneypot();
+		
+		return $this->templateForm;
+	}
+	
+	/**
+	 * add some fake form inputs that have to remain blank
+	 *
+	 */
+	public function addHoneypot()
+	{
+		
+		$pots = '';
+		foreach ($this->honeypotinput as $pot)
+		{
+			if (rand(1,2)%2==0)
+				$pots .= 	'<input type="hidden" name="'.$pot.'" value=""/>';
+			else 
+				$pots .= 	'<input type="text" name="'.$pot.'" value="" style="display:none"/>';
+		}
+		$pots .= 	'</form>';
+		
+		$this->templateForm = str_ireplace('</form>',$pots,$this->templateForm);
+	}
+	
+	/**
+	 * if one of the honeypots is not
+	 * null then I kill the script
+	 *
+	 */
+	public function checkHoneypot()
+	{
+		$die = __('This is SPAM!!!','fcc');
+		
+		foreach ($this->honeypotinput as $pot)
+			if ($_POST[$pot]!='') die($die);
+	}
 }
 
 
@@ -339,29 +366,30 @@ function fcc_loader($data)
 	else
 	{
 		$custom_form = new fcc_custom_form();
-		
-		// format filename:title:mailto
-		$custom_form->template = $param[0];
-		if ((isset($param[1])) and ($param[1] != '')) {$custom_form->title = $param[1]; }
-		if ((isset($param[2])) and ($param[2] != '')) {$custom_form->mailto = $param[2]; }
-		
-		$custom_form->config = get_option('fcc_settings');
-		$custom_form->page = get_permalink();
-		
+		$custom_form->init($param);
+			
 		// parse the POST data and start the input validation
 		if (count($_POST) > 0)
-		{
-			if (isset($_POST['check']['required']) != '') $custom_form->parse_required(explode(',',$_POST['check']['required']));
-			if (isset($_POST['check']['integer']) != '') $custom_form->parse_integer(explode(',',$_POST['check']['integer']));
-			if (isset($_POST['check']['date']) != '') $custom_form->parse_date(explode(',',$_POST['check']['date']));
-			if (isset($_POST['check']['telephone']) != '') $custom_form->parse_telephone(explode(',',$_POST['check']['telephone']));
-			if (isset($_POST['check']['min'])) $custom_form->parse_min($_POST['check']['min']);
-			if (isset($_POST['check']['max'])) $custom_form->parse_max($_POST['check']['max']);
-
+		{			
+			if ($custom_form->honeypot)
+				$custom_form->checkHoneypot();
+			
+			// invoco tutti i parser a mia disposizione
+			foreach ($_POST['check'] as $parser => $value)
+			{
+				if (is_array($value))
+					$custom_form->execParser($parser,$value);
+				else
+					$custom_form->execParser($parser,explode(',',$value));
+			}
+			
 			$custom_form->show = false;
-
-			if (!$custom_form->error) echo $custom_form->compose_mail($_POST['fcc']);
-			else $custom_form->parse_data($_POST['fcc']);
+			$custom_form->setForm($_POST['fcc']);
+			$custom_form->setExecute();
+			
+			if (!$custom_form->error)
+				return $custom_form->compose_mail();
+			
 		}
 
 		// error output and generate javascript for effects
@@ -403,14 +431,12 @@ function fcc_loader($data)
 
 			$output .=  "<div>";
 			//include_once FCC_FORM_PATH.$data[1].'.php';
-			$output .= file_get_contents(FCC_FORM_PATH.$param[0].'.php',false);
-			$output .=  "<br/></div>$js";
-
-			return $output;
+			$output .=  $custom_form->getTemplateForm();
+			$output .=  "<br/></div>$js";			
 		}
 	}
-	//print_r($data);
-	//print_r($_POST);
+	
+	return $output;
 }
 
 
@@ -455,7 +481,7 @@ function fcc_conf()
 		check_admin_referer($fcc_nonce);
 
 		$data = new fcc_custom_form();
-		$data->parse_data($_POST);
+		$data->setForm($_POST);
 
 		update_option('fcc_settings', array(
 											'mailto' => $data->form['email'],
