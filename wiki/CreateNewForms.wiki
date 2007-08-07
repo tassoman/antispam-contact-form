@@ -1,4 +1,4 @@
-#labels Phase-Implementation,howto
+#labels Phase-Implementation,howto,Featured
 how to create a form
 
 = Introduction =
