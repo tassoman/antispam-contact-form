@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Contact Form Generator\n"
 "POT-Creation-Date: \n"
-"PO-Revision-Date: 2007-03-17 01:53+0100\n"
+"PO-Revision-Date: 2007-09-02 21:40+0100\n"
 "Last-Translator: Tassoman <tassoman@gmail.com>\n"
 "Language-Team: Fullo, Tassoman <http://code.google.com/p/antispam-contact-form/>\n"
 "MIME-Version: 1.0\n"
@@ -15,76 +15,119 @@ msgstr ""
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: contact_form.php:306
+#: contact_form.php:43
 msgid "form template is missing"
-msgstr "manca la maschera del form"
+msgstr "imanca la maschera del form"
 
-#: contact_form.php:368
+#: contact_form.php:111
 msgid "There are problems with the form"
 msgstr "Ci sono problemi con il modulo"
 
-#: contact_form.php:410
-#: contact_form.php:440
+#: contact_form.php:151
+#: contact_form.php:181
 msgid "Contact Form Generator"
 msgstr "Generatore di moduli email"
 
-#: contact_form.php:420
+#: contact_form.php:161
 msgid "Cheatin&#8217; uh?"
 msgstr "Vuoi fare il furbo, eh?"
 
-#: contact_form.php:442
+#: contact_form.php:183
 msgid "Please add &lt;!--fcc:<em>filename</em>--&gt; in the content of the post/page you want show the form."
 msgstr "Per favore inserisci &lt;!--fcc:<em>nomefile</em>--&gt; nel contenuto dell'articolo o della pagina, se vuoi mostrare un particolare modulo"
 
-#: contact_form.php:443
+#: contact_form.php:184
 msgid "If you want to change default subject or default address you must write as following: &lt;!--fcc:<em>filename:new title:email</em>--&gt;"
 msgstr "Se vuoi cambiare l'oggetto predefinito o l'indirizzo email predefinito, devi scrivere come segue: &lt;!--fcc:<em>nomefile:Nuovo titolo:email</em>--&gt;"
 
-#: contact_form.php:445
+#: contact_form.php:186
 msgid "To send mails to me@mail.com: &lt;!--fcc:<em>filename::me@mail.com</em>--&gt;"
 msgstr "Per inviare email a me@mail.com:  &lt;!--fcc:<em>nomefile::me@mail.com</em>--&gt;"
 
-#: contact_form.php:446
+#: contact_form.php:187
 msgid "To send mails to me@mail.com with subject \"hello world\": &lt;!--fcc:<em>filename:hello world:me@mail.com</em>--&gt;"
 msgstr "Per inviare email a me@mail.com con oggetto \"Ciao Mondo!\": &lt;!--fcc:<em>nomefile:Ciao Mondo:me@mail.com</em>--&gt;"
 
-#: contact_form.php:447
+#: contact_form.php:188
 msgid "To send mails with subject \"hello world\": &lt;!--fcc:<em>filename:hello world</em>--&gt;"
 msgstr "Per inviare e.mail con oggetto \"Ciao Mondo\":  &lt;!--fcc:<em>nomefile:Ciao Mondo</em>--&gt;"
 
-#: contact_form.php:450
+#: contact_form.php:191
 msgid "Form lists"
 msgstr "Elenco dei moduli"
 
-#: contact_form.php:462
+#: contact_form.php:203
 msgid "edit"
 msgstr "modifica"
 
-#: contact_form.php:476
+#: contact_form.php:217
 msgid "Email"
 msgstr "E-mail"
 
-#: contact_form.php:480
+#: contact_form.php:221
 msgid "Subject"
 msgstr "Oggetto"
 
-#: contact_form.php:484
+#: contact_form.php:225
 msgid "Default message"
 msgstr "Messaggio predefinito"
 
-#: contact_form.php:488
+#: contact_form.php:229
 msgid "Error message"
 msgstr "Messaggio di errore"
 
-#: contact_form.php:492
+#: contact_form.php:233
 msgid "AKISMET IS DEACTIVATED, SO THIS MESSAGE CAN`T BE USED"
 msgstr "AKISMET È DISATTIVATO, QUESTO MESSAGGIO NON PUÒ ESSERE MOSTRATO"
 
-#: contact_form.php:495
+#: contact_form.php:236
 msgid "Spam message"
 msgstr "Messaggio indesiderato"
 
-#: contact_form.php:500
+#: contact_form.php:241
 msgid "update"
 msgstr "Aggiorna"
+
+#: custom_form.php:113
+msgid "Message from page: "
+msgstr "Messaggio dalla pagina:"
+
+#: custom_form.php:317
+msgid "This is SPAM!!!"
+msgstr "Questo è SPAM!"
+
+#: parse_form.php:23
+#, php-format
+msgid "field %s is not numeric"
+msgstr "il campo %s non è numerico"
+
+#: parse_form.php:47
+#, php-format
+msgid "field %s is not a valid date (dd-mm-yyyy)"
+msgstr "il campo %s non è una data (gg-mm-aaaa)"
+
+#: parse_form.php:70
+#, php-format
+msgid "field %s is not a valid telephone number (+xx-xxxx-xxxxxxxx)"
+msgstr "il campo %s non è un numero telefonico valido (+xx yyyy xxxzzzx)"
+
+#: parse_form.php:93
+#, php-format
+msgid "field %s is empty"
+msgstr "il campo %s è vuoto"
+
+#: parse_form.php:116
+#, php-format
+msgid "field %s is not a valid email"
+msgstr "il campo %s non è un indirizzo email valido"
+
+#: parse_form.php:153
+#, php-format
+msgid "value %s is greater than max allowed value (%d)"
+msgstr "il valore %s è maggiore del valore massimo consentito (%d)"
+
+#: parse_form.php:189
+#, php-format
+msgid "value %s is smaller than min allowed value (%d)"
+msgstr "il valore %s è più piccolo del valore minimo consentito (%d)"
 

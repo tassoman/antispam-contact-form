@@ -1,5 +1,10 @@
 <?php
-
+/**
+ * @TODO save forms results on db
+ * @TODO save forms layout on db
+ * @TODO move from mootools to jquery.
+ *
+ */
 class fcc_custom_form
 {
 	var $error = false;

@@ -20,7 +20,7 @@ class fcc_parseForm
 			
 			if ($_POST['fcc'][$v] != "$num")
 			{
-				$this->error_msg .= __( sprintf("<li>field %s is not numeric</li>", $v), 'fcc');
+				$this->error_msg .= '<li>' . sprintf( __("field %s is not numeric", 'fcc') , $v) . '</li>' . "\n";
 				$this->error_input[] = $v;
 				$this->error = true;							
 				
@@ -44,7 +44,7 @@ class fcc_parseForm
 		{
 			if (ereg('^(0?[1-9]|[1-2][0-9]|3[01])[[:blank:]/\.\\-](0?[1-9]|1[0-2])[[:blank:]/\.\\-](19[3-9][0-9]|20[01][0-9])$|^$',$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= __( sprintf( "<li>field %s is not a valid date (dd-mm-yyyy)</li>", $v), 'fcc');
+				$this->error_msg .= '<li>' . sprintf( __( "field %s is not a valid date (dd-mm-yyyy)" , 'fcc') , $v ) . '</li>' . "\n";
 				$this->error_input[] = $v;
 				$this->error = true;
 				
@@ -67,7 +67,7 @@ class fcc_parseForm
 		{
 			if (ereg("^[00[1-9]{1,4}|\+[1-9]{1,4}]?[[:blank:]\./-]?(3[2-9][0-9]|0[2-9][0-9]{1,2})[[:blank:]\./-]?[0-9]{6,9}$|^$",$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= __( sprintf("<li>field %s is not a valid telephone number (+xx-xxxx-xxxxxxxx)</li>", $v), 'fcc');
+				$this->error_msg .= '<li>' . sprintf ( __("field %s is not a valid telephone number (+xx-xxxx-xxxxxxxx)") , $v ) . '</li>' . "\n";
 				$this->error_input[] = $v;
 				$this->error = true;
 				
@@ -90,7 +90,7 @@ class fcc_parseForm
 		{
 			if ($_POST['fcc'][$v] == '')
 			{
-				$this->error_msg .= __(sprintf("<li>field %s is empty</li>", $v) , 'fcc');
+				$this->error_msg .= '<li>' . sprintf( __("field %s is empty" , 'fcc') , $v ) . '</li>' . "\n";
 				$this->error_input[] = $v;
 				$this->error = true;
 				
@@ -113,7 +113,7 @@ class fcc_parseForm
 		{
 			if (ereg("^a-z0-9@.",$_POST['fcc'][$v]))
 			{
-				$this->error_msg .= __( sprintf("<li>field %s is not a valid email</li>", $v), 'fcc');
+				$this->error_msg .= '<li>' . sprintf( __("field %s is not a valid email" , 'fcc') , $v ) . '</li>' . "\n";
 				$this->error_input[] = $v;
 				$this->error = true;
 				
@@ -150,7 +150,7 @@ class fcc_parseForm
 							
 				if ( $checker > $num)
 				{
-					$this->error_msg .= __( sprintf("<li>value %s is greater than max allowed value (%d)</li>", $valore, $num), 'fcc');
+					$this->error_msg .= '<li>' . sprintf( __("value %s is greater than max allowed value (%d)" , 'fcc') , $valore, $num ) . '</li>' . "\n";
 					$this->error_input[] = $valore;
 					$this->error = true;
 					
@@ -186,7 +186,7 @@ class fcc_parseForm
 							
 				if ( $checker < $num)
 				{
-					$this->error_msg .= __( sprintf("<li>value %s is lesser than min allowed value (%d)</li>", $valore, $num), 'fcc');
+					$this->error_msg .= '<li>' . sprintf( __("value %s is smaller than min allowed value (%d)" , 'fcc') , $valore, $num ) . '</li>' . "\n";
 					$this->error_input[] = $valore;
 					$this->error = true;
 					
