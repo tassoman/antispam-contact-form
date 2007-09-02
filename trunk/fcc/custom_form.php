@@ -245,7 +245,7 @@ class fcc_custom_form
 				
 				$this->executeClass = $className;
 				$this->execute = new $className;
-				$this->execute->setData(&$this->form);
+				$this->execute->setData($this->form);
 			}
 			else 
 				die("error the class fcc_formExec_".$this->template." doesn't exists");
