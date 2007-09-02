@@ -1,15 +1,15 @@
 <?php
 /*
-Plugin Name: Contact Form Generator
-Plugin URI: http://www.fullo.net
-Description: This contact form accept any data from your site and send as email to you
+Plugin Name: Antispam contact form
+Plugin URI: http://code.google.com/p/antispam-contact-form
+Description: This contact form accept any data from your site and send as email to you in a customized way. It uses easy templates.
 Version: 0.4.5
-Author: Francesco Fullone
-Author URI: http://www.fullo.net/
+Author: Francesco Fullone and Tassoman
+Author URI: http://code.google.com/p/antispam-contact-form
 */
 
 define(FCC_PATH, ABSPATH.'/wp-content/plugins/fcc/');
-define(FCC_FORM_PATH,FCC_PATH.'/forms/');
+define(FCC_FORM_PATH,FCC_PATH.'forms/');
 define(FCC_SUCCESS_PATH,FCC_PATH.'success/');
 define(FCC_ERROR_PATH,FCC_PATH.'errors/');
 define(FCC_EXEC_PATH,FCC_PATH.'exec/');
@@ -161,7 +161,7 @@ function fcc_conf()
 			die(__('Cheatin&#8217; uh?'));
 
 		check_admin_referer($fcc_nonce);
-
+		require_once(FCC_PATH . 'custom_form.php');
 		$data = new fcc_custom_form();
 		$data->setForm($_POST);
 
@@ -229,18 +229,17 @@ function fcc_conf()
 			<h3><label for="msg"><?php echo _e('Error message','fcc');?></label></h3>
 			<textarea id="error" name="error" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message_error']); ?></textarea>
 		</p>
-		<?php if (get_option('wordpress_api_key') != '') { ?>
-		<p><h3 style="color:red"><?php _e('AKISMET IS DEACTIVATED, SO THIS MESSAGE CAN`T BE USED','fcc');?></h3></p>
+		<?php if (get_option('wordpress_api_key') == '') { ?>
+		<p><h3 style="color:red"><?php _e('AKISMET IS DEACTIVATED, SO THE FOLLOWING MESSAGE CAN`T BE USED','fcc');?></h3></p>
 		<?php } ?>
 		<p>
 			<h3><label for="msg"><?php echo _e('Spam message','fcc');?></label></h3>
-			<textarea id="spam" name="spam" style="font-family: 'Courier New', Courier, mono; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message_spam']); ?></textarea>
+			<textarea id="spam" name="spam" style="font-family: 'Courier New', Courier, monospace; font-size: 0.9em;"><?php echo stripcslashes($fcconfig['message_spam']); ?></textarea>
 		</p>
 
 		<p>
-			<input type="submit" name="submit" value="<?php _e('update');?>" />
+			<input type="submit" name="submit" value="<?php _e('Update', 'fcc');?>" />
 		</p>
-
 	</form>
 </div>
 <?php
